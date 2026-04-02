@@ -1,6 +1,7 @@
 name = "eduspark-api"
 main = "src/index.ts"
 compatibility_date = "2024-02-08"
+account_id = "cfut_d2kvjws2oUdegpBRS9bUowhWSErEhvaTAXyTxZdGb7c0f2c1"
 
 # 环境变量 (在 Cloudflare Dashboard 中设置)
 [vars]
@@ -9,7 +10,7 @@ compatibility_date = "2024-02-08"
 # KV 命名空间 (用于缓存和用户数据)
 [[kv_namespaces]]
 binding = "EDUSPARK_KV"
-id = "your-kv-namespace-id"
+id = ""
 
 # AI Gateway (可选，用于缓存 AI 响应)
 [[ai]]
@@ -17,5 +18,5 @@ binding = "AI"
 
 # 路由规则
 [[routes]]
-pattern = "api.eduspark.app/*"
-custom_domain = true
+pattern = "api.eduspark.workers.dev/*"
+custom_domain = false

@@ -1,0 +1,9 @@
+{
+  "name": "eduspark",
+  "compatibility_date": "2024-02-08",
+  "build": {
+    "command": "npm run build",
+    "cwd": "frontend",
+    "output_dir": "dist"
+  }
+}

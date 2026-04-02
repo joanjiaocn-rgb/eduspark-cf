@@ -7,7 +7,8 @@ import './App.css'
 type Page = 'dashboard' | 'lesson-plan' | 'grading'
 
 // Cloudflare Worker API 地址
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.eduspark.app'
+// 开发环境使用 localhost，生产环境使用 Workers 地址
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8787'
 
 function App() {
   const [currentPage, setCurrentPage] = useState<Page>('dashboard')
