@@ -1,13 +1,32 @@
 import { useState } from 'react'
-import { ArrowLeft, Loader2, Copy, Download } from 'lucide-react'
+import { ArrowLeft, Loader2, Copy, Download, Sparkles, CheckCircle, BookOpen, GraduationCap, Clock, Lightbulb } from 'lucide-react'
 import { API_BASE_URL } from '../App'
 
 interface LessonPlanProps {
   onBack: () => void
 }
 
-const subjects = ['Mathematics', 'English', 'Science', 'History', 'Geography', 'Art', 'Music', 'Physical Education']
-const grades = ['Kindergarten', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12']
+const subjects = [
+  { value: '语文', label: '语文', icon: '📚' },
+  { value: '数学', label: '数学', icon: '🔢' },
+  { value: '英语', label: '英语', icon: '🔤' },
+  { value: '物理', label: '物理', icon: '⚛️' },
+  { value: '化学', label: '化学', icon: '🧪' },
+  { value: '生物', label: '生物', icon: '🧬' },
+  { value: '历史', label: '历史', icon: '📜' },
+  { value: '地理', label: '地理', icon: '🌍' },
+  { value: '政治', label: '政治', icon: '⚖️' },
+  { value: '音乐', label: '音乐', icon: '🎵' },
+  { value: '美术', label: '美术', icon: '🎨' },
+  { value: '体育', label: '体育', icon: '⚽' },
+]
+
+const grades = [
+  '幼儿园',
+  '一年级', '二年级', '三年级', '四年级', '五年级', '六年级',
+  '七年级', '八年级', '九年级',
+  '高一', '高二', '高三'
+]
 
 function LessonPlan({ onBack }: LessonPlanProps) {
   const [formData, setFormData] = useState({
@@ -15,12 +34,13 @@ function LessonPlan({ onBack }: LessonPlanProps) {
     grade: '',
     topic: '',
     instructions: '',
-    duration: '45 minutes'
+    duration: '45'
   })
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState('')
   const [error, setError] = useState('')
   const [isCached, setIsCached] = useState(false)
+  const [copied, setCopied] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -41,10 +61,10 @@ function LessonPlan({ onBack }: LessonPlanProps) {
         setResult(data.data)
         setIsCached(data.cached || false)
       } else {
-        setError(data.error || 'Failed to generate lesson plan')
+        setError(data.error || '生成失败，请重试')
       }
     } catch (err) {
-      setError('Network error. Please try again.')
+      setError('网络错误，请检查网络连接')
     } finally {
       setLoading(false)
     }
@@ -52,6 +72,8 @@ function LessonPlan({ onBack }: LessonPlanProps) {
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(result)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
   }
 
   const downloadAsText = () => {
@@ -59,180 +81,234 @@ function LessonPlan({ onBack }: LessonPlanProps) {
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `lesson-plan-${formData.topic.replace(/\s+/g, '-').toLowerCase()}.md`
+    a.download = `教案-${formData.topic}-${formData.grade}.md`
     a.click()
     URL.revokeObjectURL(url)
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
+      {/* Background effects */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"></div>
+      </div>
+
       {/* Header */}
-      <header className="w-full px-6 py-4 flex items-center gap-4 bg-white/80 backdrop-blur-sm border-b border-slate-200">
-        <button onClick={onBack} className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
-          <ArrowLeft className="w-5 h-5 text-slate-600" />
+      <header className="relative z-10 w-full px-6 py-4 flex items-center gap-4 backdrop-blur-md bg-white/5 border-b border-white/10">
+        <button 
+          onClick={onBack} 
+          className="p-2 hover:bg-white/10 rounded-xl transition-all text-white/80 hover:text-white"
+        >
+          <ArrowLeft className="w-5 h-5" />
         </button>
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-lg">E</span>
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-purple-600 rounded-lg flex items-center justify-center">
+            <Sparkles className="w-4 h-4 text-white" />
           </div>
-          <span className="text-xl font-bold text-slate-800">EduSpark</span>
+          <span className="text-lg font-bold text-white">EduSpark</span>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 p-6">
-        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-8">
-          {/* Left: Input Form */}
-          <div className="bg-white rounded-2xl p-8 shadow-lg border border-slate-100">
-            <div className="mb-6">
-              <span className="text-sm font-medium text-primary-600">Step 1</span>
-              <h1 className="text-2xl font-bold text-slate-800 mt-1">Tell AI about your lesson</h1>
+      <main className="relative z-10 p-6">
+        <div className="max-w-7xl mx-auto">
+          {/* Page Title */}
+          <div className="text-center mb-10">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-sm mb-4">
+              <BookOpen className="w-4 h-4" />
+              <span>AI 教案生成器</span>
             </div>
-
-            <form onSubmit={handleSubmit} className="space-y-5">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Subject *</label>
-                <select
-                  value={formData.subject}
-                  onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all"
-                  required
-                >
-                  <option value="">Select a subject</option>
-                  {subjects.map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Grade Level *</label>
-                <select
-                  value={formData.grade}
-                  onChange={(e) => setFormData({ ...formData, grade: e.target.value })}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all"
-                  required
-                >
-                  <option value="">Select a grade</option>
-                  {grades.map(g => <option key={g} value={g}>{g}</option>)}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Core Topic / Keywords *</label>
-                <input
-                  type="text"
-                  value={formData.topic}
-                  onChange={(e) => setFormData({ ...formData, topic: e.target.value })}
-                  placeholder="e.g., Photosynthesis, World War II, Quadratic Equations"
-                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Lesson Duration</label>
-                <select
-                  value={formData.duration}
-                  onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all"
-                >
-                  <option value="30 minutes">30 minutes</option>
-                  <option value="45 minutes">45 minutes</option>
-                  <option value="60 minutes">60 minutes</option>
-                  <option value="90 minutes">90 minutes</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Additional Instructions (Optional)</label>
-                <textarea
-                  value={formData.instructions}
-                  onChange={(e) => setFormData({ ...formData, instructions: e.target.value })}
-                  placeholder="e.g., 'focus on critical thinking', 'include group activities', '5E model'"
-                  rows={3}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all resize-none"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading || !formData.subject || !formData.grade || !formData.topic}
-                className="w-full py-4 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Generating...
-                  </>
-                ) : (
-                  <>
-                    Generate Lesson Plan
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                    </svg>
-                  </>
-                )}
-              </button>
-            </form>
+            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">创建您的教案</h1>
+            <p className="text-white/50">填写以下信息，AI 将为您生成专业教案</p>
           </div>
 
-          {/* Right: Result Preview */}
-          <div className="bg-white rounded-2xl shadow-lg border border-slate-100 overflow-hidden">
-            {!result ? (
-              <div className="h-full min-h-[500px] flex flex-col items-center justify-center p-8 text-center">
-                <div className="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center mb-6">
-                  <svg className="w-12 h-12 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-semibold text-slate-700 mb-2">Your AI-generated lesson plan will appear here</h3>
-                <p className="text-slate-500">Fill in the form and click generate to get started</p>
-              </div>
-            ) : (
-              <div className="h-full flex flex-col">
-                {/* Toolbar */}
-                <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50">
-                  <div className="flex items-center gap-3">
-                    <span className="font-semibold text-slate-700">Generated Lesson Plan</span>
-                    {isCached && (
-                      <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">
-                        Cached
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={copyToClipboard}
-                      className="p-2 text-slate-600 hover:bg-white hover:shadow-sm rounded-lg transition-all"
-                      title="Copy All"
-                    >
-                      <Copy className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={downloadAsText}
-                      className="p-2 text-slate-600 hover:bg-white hover:shadow-sm rounded-lg transition-all"
-                      title="Download"
-                    >
-                      <Download className="w-4 h-4" />
-                    </button>
+          <div className="grid lg:grid-cols-2 gap-8">
+            {/* Left: Input Form */}
+            <div className="bg-white/5 backdrop-blur-md rounded-3xl p-8 border border-white/10">
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Subject */}
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-medium text-white/80 mb-3">
+                    <BookOpen className="w-4 h-4 text-blue-400" />
+                    学科 *
+                  </label>
+                  <div className="grid grid-cols-4 gap-2">
+                    {subjects.map((s) => (
+                      <button
+                        key={s.value}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, subject: s.value })}
+                        className={`p-3 rounded-xl border transition-all text-center ${
+                          formData.subject === s.value
+                            ? 'bg-blue-500 border-blue-400 text-white'
+                            : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10'
+                        }`}
+                      >
+                        <div className="text-2xl mb-1">{s.icon}</div>
+                        <div className="text-xs">{s.label}</div>
+                      </button>
+                    ))}
                   </div>
                 </div>
 
-                {/* Content */}
-                <div className="flex-1 p-6 overflow-auto">
-                  <div className="prose prose-slate max-w-none">
-                    <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-slate-700">
-                      {result}
-                    </pre>
+                {/* Grade */}
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-medium text-white/80 mb-3">
+                    <GraduationCap className="w-4 h-4 text-purple-400" />
+                    年级 *
+                  </label>
+                  <select
+                    value={formData.grade}
+                    onChange={(e) => setFormData({ ...formData, grade: e.target.value })}
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                    required
+                  >
+                    <option value="" className="bg-slate-800">选择年级</option>
+                    {grades.map(g => (
+                      <option key={g} value={g} className="bg-slate-800">{g}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Topic */}
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-medium text-white/80 mb-3">
+                    <Lightbulb className="w-4 h-4 text-yellow-400" />
+                    教学主题 *
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.topic}
+                    onChange={(e) => setFormData({ ...formData, topic: e.target.value })}
+                    placeholder="例如：光合作用、二次函数、唐诗宋词..."
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/30 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                    required
+                  />
+                </div>
+
+                {/* Duration */}
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-medium text-white/80 mb-3">
+                    <Clock className="w-4 h-4 text-green-400" />
+                    课时长度
+                  </label>
+                  <div className="flex gap-3">
+                    {['40', '45', '90'].map((min) => (
+                      <button
+                        key={min}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, duration: min })}
+                        className={`flex-1 py-3 rounded-xl border transition-all ${
+                          formData.duration === min
+                            ? 'bg-green-500 border-green-400 text-white'
+                            : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10'
+                        }`}
+                      >
+                        {min} 分钟
+                      </button>
+                    ))}
                   </div>
                 </div>
-              </div>
-            )}
 
-            {error && (
-              <div className="p-4 bg-red-50 border-t border-red-100">
-                <p className="text-red-600 text-sm">{error}</p>
-              </div>
-            )}
+                {/* Instructions */}
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-medium text-white/80 mb-3">
+                    <Sparkles className="w-4 h-4 text-pink-400" />
+                    特殊要求（可选）
+                  </label>
+                  <textarea
+                    value={formData.instructions}
+                    onChange={(e) => setFormData({ ...formData, instructions: e.target.value })}
+                    placeholder="例如：需要小组讨论环节、重点培养学生的批判性思维..."
+                    rows={3}
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/30 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-none"
+                  />
+                </div>
+
+                {/* Submit Button */}
+                <button
+                  type="submit"
+                  disabled={loading || !formData.subject || !formData.grade || !formData.topic}
+                  className="w-full py-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-blue-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      AI 正在生成教案...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-5 h-5" />
+                      生成教案
+                    </>
+                  )}
+                </button>
+              </form>
+            </div>
+
+            {/* Right: Result Preview */}
+            <div className="bg-white/5 backdrop-blur-md rounded-3xl border border-white/10 overflow-hidden min-h-[600px]">
+              {!result ? (
+                <div className="h-full min-h-[600px] flex flex-col items-center justify-center p-8 text-center">
+                  <div className="w-32 h-32 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full flex items-center justify-center mb-6">
+                    <Sparkles className="w-16 h-16 text-blue-400/50" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-white mb-2">AI 生成的教案将显示在这里</h3>
+                  <p className="text-white/50 max-w-sm">填写左侧表单并点击生成按钮，即可获得完整的教学教案</p>
+                </div>
+              ) : (
+                <div className="h-full flex flex-col">
+                  {/* Toolbar */}
+                  <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-white/5">
+                    <div className="flex items-center gap-3">
+                      <span className="font-semibold text-white">生成的教案</span>
+                      {isCached && (
+                        <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded-full">
+                          已缓存
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={copyToClipboard}
+                        className={`p-2 rounded-lg transition-all flex items-center gap-1 ${
+                          copied 
+                            ? 'bg-green-500 text-white' 
+                            : 'bg-white/10 text-white/70 hover:bg-white/20'
+                        }`}
+                        title="复制"
+                      >
+                        {copied ? <CheckCircle className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                        {copied && <span className="text-sm">已复制</span>}
+                      </button>
+                      <button
+                        onClick={downloadAsText}
+                        className="p-2 bg-white/10 text-white/70 hover:bg-white/20 rounded-lg transition-all"
+                        title="下载"
+                      >
+                        <Download className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex-1 p-6 overflow-auto">
+                    <div className="prose prose-invert max-w-none">
+                      <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-white/80 bg-transparent p-0">
+                        {result}
+                      </pre>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {error && (
+                <div className="p-4 bg-red-500/20 border-t border-red-500/30">
+                  <p className="text-red-300 text-sm">{error}</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </main>
