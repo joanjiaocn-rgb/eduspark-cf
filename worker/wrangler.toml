@@ -8,13 +8,10 @@ account_id = "cfut_d2kvjws2oUdegpBRS9bUowhWSErEhvaTAXyTxZdGb7c0f2c1"
 # OPENAI_API_KEY = "your-key-here"  # 在 Dashboard 中设置，不要硬编码
 
 # KV 命名空间 (用于缓存和用户数据)
-[[kv_namespaces]]
-binding = "EDUSPARK_KV"
-id = ""
-
-# AI Gateway (可选，用于缓存 AI 响应)
-[[ai]]
-binding = "AI"
+# 创建后填入 id: wrangler kv namespace create "EDUSPARK_KV"
+# [[kv_namespaces]]
+# binding = "EDUSPARK_KV"
+# id = "your-kv-namespace-id"
 
 # 路由规则
 [[routes]]
