@@ -1,147 +1,165 @@
 'use client';
 
 import { useState } from 'react';
-import { LessonForm } from './components/LessonForm';
-import { LessonDisplay } from './components/LessonDisplay';
-import { LessonPlanRequest, LessonPlanResponse } from './types';
+import LessonForm from './components/LessonForm';
+import LessonDisplay from './components/LessonDisplay';
+import { LessonPlan, FormData } from './types';
 
-export default function Home() {
-  const [result, setResult] = useState<LessonPlanResponse | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+export default function HomePage() {
+  const [lessonPlan, setLessonPlan] = useState<LessonPlan | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [currentFormData, setCurrentFormData] = useState<FormData | null>(null);
 
-  const handleGenerate = async (data: LessonPlanRequest) => {
-    setIsLoading(true);
-    setError(null);
-    setResult(null);
-
+  const handleGenerate = async (formData: FormData) => {
+    setIsGenerating(true);
+    setCurrentFormData(formData);
+    
     try {
       const response = await fetch('/api/generate-lesson', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(formData),
       });
 
-      const result = await response.json();
-
       if (!response.ok) {
-        throw new Error(result.message || '生成教案失败');
+        throw new Error('生成失败');
       }
 
-      setResult(result);
-    } catch (err: any) {
-      setError(err.message || '生成教案时发生错误');
+      const data = await response.json();
+      setLessonPlan(data.lessonPlan);
+    } catch (error) {
+      console.error('Error:', error);
+      alert('生成失败，请重试');
     } finally {
-      setIsLoading(false);
+      setIsGenerating(false);
+    }
+  };
+
+  const handleUpdate = async () => {
+    if (currentFormData) {
+      await handleGenerate(currentFormData);
     }
   };
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-5xl mx-auto px-4 py-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-700 rounded-lg flex items-center justify-center">
-              <svg
-                className="w-6 h-6 text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                />
-              </svg>
-            </div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      {/* 头部 */}
+      <header className="bg-white shadow-lg">
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">EduSpark</h1>
-              <p className="text-sm text-gray-500">AI 教案生成器</p>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                EduSpark
+              </h1>
+              <p className="text-gray-600 mt-2">
+                北美中小学教学教案生成工具
+              </p>
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+                AI Ready
+              </div>
             </div>
           </div>
         </div>
       </header>
 
-      <div className="max-w-5xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* 表单区域 */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              创建新教案
-            </h2>
-            <LessonForm onSubmit={handleGenerate} isLoading={isLoading} />
+      <main className="container mx-auto px-4 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* 左侧：表单区域 */}
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-2xl shadow-xl p-6 sticky top-8">
+              <h2 className="text-2xl font-bold text-gray-800 mb-6">
+                创建教案
+              </h2>
+              <LessonForm 
+                onSubmit={handleGenerate}
+                isLoading={isGenerating}
+                onUpdate={handleUpdate}
+                hasLesson={!!lessonPlan}
+              />
+            </div>
           </div>
 
-          {/* 结果区域 */}
-          <div>
-            {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-                <div className="flex items-center gap-2">
-                  <svg
-                    className="w-5 h-5 text-red-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  <p className="text-red-700">{error}</p>
+          {/* 右侧：教案展示区域 */}
+          <div className="lg:col-span-2">
+            {lessonPlan ? (
+              <div className="space-y-6">
+                <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+                  <div className="bg-gradient-to-r from-blue-500 to-purple-500 p-6 text-white">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h2 className="text-2xl font-bold">{lessonPlan.title}</h2>
+                        <p className="opacity-90 mt-1">
+                          {lessonPlan.grade} • {lessonPlan.subject} • {lessonPlan.duration}分钟
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-sm bg-white/20 px-3 py-1 rounded-full">
+                          {lessonPlan.standard}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <LessonDisplay lessonPlan={lessonPlan} />
+                </div>
+
+                {/* 导出按钮 */}
+                <div className="bg-white rounded-2xl shadow-xl p-6">
+                  <ExportButtons lessonPlan={lessonPlan} />
+                </div>
+              </div>
+            ) : (
+              <div className="bg-white rounded-2xl shadow-xl p-12 text-center">
+                <div className="max-w-md mx-auto">
+                  <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-r from-blue-100 to-purple-100 flex items-center justify-center">
+                    <svg className="w-12 h-12 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                    </svg>
+                  </div>
+                  <h3 className="text-2xl font-bold text-gray-800 mb-3">
+                    开始创建您的教案
+                  </h3>
+                  <p className="text-gray-600 mb-6">
+                    在左侧填写教案要求，AI将为您生成符合北美教学标准的完整教案
+                  </p>
+                  <div className="space-y-3 text-sm text-gray-500">
+                    <div className="flex items-center justify-center">
+                      <svg className="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                      符合北美教学标准
+                    </div>
+                    <div className="flex items-center justify-center">
+                      <svg className="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                      支持多格式导出
+                    </div>
+                    <div className="flex items-center justify-center">
+                      <svg className="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                      可重复编辑优化
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
-
-            {result?.data && (
-              <LessonDisplay
-                lessonPlan={result.data.lessonPlan}
-                metadata={result.data.metadata}
-              />
-            )}
-
-            {!result && !error && !isLoading && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
-                <svg
-                  className="w-12 h-12 text-blue-400 mx-auto mb-3"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-                  />
-                </svg>
-                <p className="text-blue-700 font-medium">
-                  填写左侧表单，开始生成教案
-                </p>
-                <p className="text-blue-500 text-sm mt-1">
-                  支持语文、数学、英语等多个学科
-                </p>
-              </div>
-            )}
           </div>
         </div>
-      </div>
+      </main>
 
-      {/* Footer */}
-      <footer className="bg-white border-t border-gray-200 mt-12">
-        <div className="max-w-5xl mx-auto px-4 py-6">
-          <p className="text-center text-sm text-gray-500">
-            EduSpark - AI 驱动的教案生成工具
-          </p>
-        </div>
+      <footer className="mt-12 py-6 border-t border-gray-200 text-center text-gray-500 text-sm">
+        <p>© 2024 EduSpark. 专为北美中小学教师设计</p>
+        <p className="mt-1">本工具符合 Common Core State Standards 和 北美教学标准</p>
       </footer>
-    </main>
+    </div>
   );
 }
+
+// 导入 ExportButtons
+import ExportButtons from './components/ExportButtons';
